@@ -8,7 +8,6 @@ import (
 	"github.com/operator-framework/operator-registry/pkg/api"
 	"github.com/operator-framework/operator-registry/pkg/api/grpc_health_v1"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
@@ -107,66 +106,4 @@ func TestListBundlesRecvError(t *testing.T) {
 
 	require.Nil(t, it.Next())
 	require.Equal(t, expected, it.Error())
-}
-
-func TestListBundlesNext(t *testing.T) {
-	expected := &api.Bundle{CsvName: "test"}
-	rstub := &BundleReceiverStub{
-		Bundle: expected,
-	}
-	cstub := &RegistryClientStub{
-		ListBundlesClient: rstub,
-	}
-	c := Client{
-		Registry: cstub,
-		Health:   cstub,
-	}
-
-	it, err := c.ListBundles(context.TODO())
-	require.NoError(t, err)
-
-	actual := it.Next()
-	require.NoError(t, it.Error())
-	require.Equal(t, expected, actual)
-}
-
-func TestGetPackage(t *testing.T) {
-	for _, tt := range []struct {
-		Name        string
-		PackageName string
-		Package     *api.Package
-		Error       error
-	}{
-		{
-			Name:        "success",
-			PackageName: "name-success",
-			Package: &api.Package{
-				Name: "expected-name",
-				Channels: []*api.Channel{
-					{
-						Name:    "expected-channel-name",
-						CsvName: "expected-csv-name",
-					},
-				},
-				DefaultChannelName: "expected-default-channel-name",
-			},
-		},
-		{
-			Name:        "error",
-			PackageName: "name-error",
-			Error:       errors.New("test error"),
-		},
-	} {
-		t.Run(tt.Name, func(t *testing.T) {
-			stub := &RegistryClientStub{
-				Package: tt.Package,
-				Error:   tt.Error,
-			}
-			c := Client{Registry: stub, Health: stub}
-			actual, err := c.GetPackage(context.TODO(), tt.PackageName)
-			assert.Equal(t, stub.PackageName, tt.PackageName)
-			assert.Equal(t, tt.Error, err)
-			assert.Equal(t, tt.Package, actual)
-		})
-	}
 }
