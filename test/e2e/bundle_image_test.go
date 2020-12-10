@@ -679,6 +679,8 @@ spec:
 
 func buildContainer(tag, dockerfilePath, dockerContext string) {
 	cmd := exec.Command(builderCmd, "build", "-t", tag, "-f", dockerfilePath, dockerContext)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
 	err := cmd.Run()
 	Expect(err).NotTo(HaveOccurred())
 }
